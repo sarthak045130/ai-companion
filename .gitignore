@@ -1,0 +1,9 @@
+.venv/
+__pycache__/
+*.pyc
+data/database/*
+data/conversations/*
+data/memories/*
+data/settings.json
+data/*.log
+!data/**/.gitkeep

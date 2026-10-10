@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="companion-token" content="__COMPANION_TOKEN__">
+  <title>Companion</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+  <div id="app">
+    <aside id="sidebar" aria-label="Conversations">
+      <div class="sidebar-top">
+        <button id="new-chat" class="btn primary wide" type="button"><span data-icon="plus"></span>New chat</button>
+        <label class="search">
+          <span data-icon="search"></span>
+          <input id="conv-search" type="search" placeholder="Search chats" aria-label="Search chats" autocomplete="off">
+        </label>
+      </div>
+      <nav id="conv-list"></nav>
+      <div class="sidebar-foot">
+        <button id="open-memories" class="nav-btn" type="button"><span data-icon="memory"></span><span>Memories</span><span id="mem-count" class="count"></span></button>
+        <button id="open-settings" class="nav-btn" type="button"><span data-icon="settings"></span><span>Settings</span></button>
+      </div>
+    </aside>
+
+    <main id="main">
+      <header id="chat-header">
+        <div class="who">
+          <span id="status-dot" class="dot off" role="img" aria-label="Connection status"></span>
+          <div>
+            <h1 id="companion-name">Companion</h1>
+            <p id="status-text">Connecting…</p>
+          </div>
+        </div>
+        <div class="header-actions">
+          <span id="model-badge" class="chip" title="Current model"></span>
+          <button id="speak-toggle" class="icon-btn" type="button" aria-label="Read replies aloud" aria-pressed="false"></button>
+          <button id="stop-speaking" class="icon-btn" type="button" aria-label="Stop speaking" hidden></button>
+        </div>
+      </header>
+
+      <div id="banner" class="banner" role="alert" hidden></div>
+
+      <section id="view-chat">
+        <div id="messages" role="log" aria-live="polite" aria-label="Conversation"></div>
+        <form id="composer" autocomplete="off">
+          <div id="recording-bar" hidden>
+            <span class="rec-dot"></span>
+            <span id="rec-label">Listening… 0:00</span>
+            <span class="level"><i id="rec-level"></i></span>
+          </div>
+          <textarea id="input" rows="1" placeholder="Message" aria-label="Message"></textarea>
+          <button id="mic" class="icon-btn" type="button" aria-label="Speak your message"></button>
+          <button id="mic-cancel" class="icon-btn" type="button" aria-label="Cancel recording" hidden></button>
+          <button id="send" class="send-btn" type="submit" aria-label="Send message"></button>
+        </form>
+        <p class="fineprint">Your companion is an AI. Everything stays on this computer.</p>
+      </section>
+
+      <section id="view-memories" hidden></section>
+    </main>
+  </div>
+  <div id="modal-root"></div>
+  <div id="toasts" aria-live="polite"></div>
+  <script src="/render.js"></script>
+  <script src="/app.js"></script>
+  <script src="/avatar/load.js"></script>
+</body>
+</html>

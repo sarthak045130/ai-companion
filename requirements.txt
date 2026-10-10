@@ -1,0 +1,10 @@
+# Core (the chat, memory and API need only numpy; everything else is the Python standard library)
+numpy>=1.26
+
+# Native desktop window (WKWebView on macOS). Without it the app opens in your browser instead.
+pywebview>=5.0
+
+# Voice input: microphone capture + local Whisper speech recognition.
+# Voice output uses the built-in macOS `say` command, so it needs nothing here.
+sounddevice>=0.4.6
+faster-whisper>=1.0
