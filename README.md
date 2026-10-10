@@ -6,6 +6,20 @@
 
 > This repository contains the app's source code. The website is a project page; the chat app itself runs locally on macOS and is not hosted as a browser service.
 
+## Screenshots
+
+### Chat with Nova
+
+<p align="center">
+  <img src="docs/images/nova-chat.png" alt="Nova chat showing a conversation and memory recall" width="900">
+</p>
+
+### Choose a video-call companion
+
+<p align="center">
+  <img src="docs/images/nova-character-picker.png" alt="Nova video-call character picker with a selection of companions" width="900">
+</p>
+
 ## What it does
 
 - **Chats with Ollama** using models installed on your Mac.
