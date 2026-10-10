@@ -1,0 +1,185 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#101311">
+  <meta name="description" content="A local-first AI companion for macOS with editable memory, a configurable personality, voice, and Ollama.">
+  <title>AI Companion — Your AI, on your Mac</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #101311;
+      --panel: #171d19;
+      --panel-2: #1d2520;
+      --ink: #f3f5ee;
+      --muted: #a2ada3;
+      --line: #303b33;
+      --lime: #c5f279;
+      --mint: #b7e8d1;
+      --serif: Georgia, 'Times New Roman', serif;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body { margin: 0; background: var(--bg); color: var(--ink); line-height: 1.55; }
+    a { color: inherit; text-decoration: none; }
+    .wrap { width: min(1120px, calc(100% - 48px)); margin: 0 auto; }
+    .nav { height: 76px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid rgba(211,229,203,.1); }
+    .brand { display: inline-flex; align-items: center; gap: 11px; font-size: 14px; font-weight: 650; letter-spacing: -.02em; }
+    .mark { width: 31px; height: 31px; display: grid; place-items: center; border: 1px solid #4e6344; border-radius: 11px 11px 11px 4px; color: var(--lime); font-size: 17px; transform: rotate(-4deg); }
+    .brand span:last-child { transform: none; }
+    .navlinks { display: flex; align-items: center; gap: 28px; color: var(--muted); font-size: 13px; }
+    .navlinks a:hover, .text-link:hover { color: var(--lime); }
+    .button { display: inline-flex; align-items: center; justify-content: center; gap: 10px; min-height: 48px; padding: 0 19px; border: 1px solid var(--lime); border-radius: 8px; background: var(--lime); color: #182016; font-size: 13px; font-weight: 750; transition: transform .18s ease, background .18s ease; }
+    .button:hover { transform: translateY(-2px); background: #d5ff92; }
+    .button.secondary { border-color: #455348; background: transparent; color: var(--ink); }
+    .button.secondary:hover { border-color: var(--lime); color: var(--lime); }
+    .hero { display: grid; grid-template-columns: 1.03fr .97fr; gap: 52px; align-items: center; padding: 88px 0 95px; }
+    .eyebrow { display: inline-flex; align-items: center; gap: 9px; color: var(--lime); font-size: 11px; font-weight: 700; letter-spacing: .13em; text-transform: uppercase; }
+    .eyebrow:before { content: ''; width: 20px; height: 1px; background: var(--lime); }
+    h1 { max-width: 610px; margin: 21px 0 20px; font: 500 clamp(44px, 6vw, 76px)/.99 var(--serif); letter-spacing: -.055em; }
+    h1 em { color: var(--lime); font-weight: 400; }
+    .lede { max-width: 500px; margin: 0; color: #b5beb4; font-size: 16px; line-height: 1.75; }
+    .actions { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 31px; }
+    .micro { margin-top: 18px; color: #849087; font-size: 11px; }
+    .showcase { position: relative; padding: 24px; border: 1px solid #354239; border-radius: 18px; background: radial-gradient(ellipse at 74% 4%, rgba(146,193,103,.13), transparent 42%), #151b17; box-shadow: 0 28px 90px rgba(0,0,0,.32); }
+    .showcase:before { content: ''; position: absolute; z-index: -1; inset: 23px -14px -17px 22px; border: 1px solid rgba(198,234,170,.13); border-radius: 18px; }
+    .windowbar { display: flex; align-items: center; gap: 6px; padding: 0 2px 18px; border-bottom: 1px solid var(--line); }
+    .dot { width: 7px; height: 7px; border-radius: 50%; background: #455247; }
+    .window-title { margin-left: 8px; color: #93a096; font-size: 10px; letter-spacing: .06em; }
+    .chat { display: grid; grid-template-columns: 95px 1fr; min-height: 315px; }
+    .side { padding: 17px 12px 0 2px; border-right: 1px solid var(--line); }
+    .side-label { margin: 0 0 13px; color: #68756b; font-size: 8px; letter-spacing: .12em; text-transform: uppercase; }
+    .side-item { margin: 9px 0; color: #9aa69b; font-size: 9px; }
+    .side-item.active { color: var(--lime); }
+    .conversation { padding: 25px 0 0 17px; }
+    .chathead { display: flex; justify-content: space-between; align-items: center; padding-bottom: 18px; color: #e5ebe2; font: 14px var(--serif); }
+    .online { color: var(--lime); font: 8px var(--serif); }
+    .bubble { max-width: 94%; margin: 0 0 12px; padding: 10px 12px; border: 1px solid #303c32; border-radius: 3px 12px 12px; background: #1c241e; color: #c3ccc1; font-size: 9px; line-height: 1.65; }
+    .bubble.user { margin-left: auto; border-color: #536343; border-radius: 12px 3px 12px 12px; background: #273122; color: #e5f1d9; }
+    .memory-note { display: flex; gap: 7px; align-items: center; margin-top: 15px; color: #a1b28e; font-size: 8px; }
+    .memory-note span { display: inline-grid; width: 13px; height: 13px; place-items: center; border-radius: 50%; background: #34432c; color: var(--lime); }
+    .input { display: flex; justify-content: space-between; align-items: center; margin-top: 15px; padding: 9px 10px; border: 1px solid #354138; border-radius: 7px; color: #68746b; font-size: 8px; }
+    .send { display: grid; width: 23px; height: 23px; place-items: center; border-radius: 5px; background: var(--lime); color: #192015; font-size: 13px; }
+    .local-tag { position: absolute; right: -13px; bottom: 25px; padding: 9px 12px; border: 1px solid #526346; border-radius: 7px; background: #20291f; color: #d5e2cb; box-shadow: 0 12px 30px #0b0d0b; font-size: 9px; }
+    .local-tag strong { color: var(--lime); font-weight: 700; }
+    .rule { border-top: 1px solid rgba(211,229,203,.11); }
+    .intro { display: flex; justify-content: space-between; gap: 50px; padding: 68px 0 64px; }
+    .intro h2, .section-title { max-width: 450px; margin: 13px 0 0; font: 500 clamp(30px, 4vw, 45px)/1.08 var(--serif); letter-spacing: -.04em; }
+    .intro-copy { max-width: 390px; align-self: end; color: var(--muted); font-size: 13px; line-height: 1.8; }
+    .features { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; padding-bottom: 80px; }
+    .feature { min-height: 191px; padding: 20px; border: 1px solid #2e3931; border-radius: 11px; background: linear-gradient(150deg, rgba(255,255,255,.025), transparent 70%); }
+    .feature-icon { display: grid; width: 31px; height: 31px; place-items: center; border: 1px solid #46563e; border-radius: 9px; color: var(--lime); font-size: 14px; }
+    .feature h3 { margin: 19px 0 7px; font: 17px var(--serif); }
+    .feature p { margin: 0; color: var(--muted); font-size: 11px; line-height: 1.75; }
+    .privacy { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; align-items: center; margin-bottom: 86px; padding: 35px 38px; border: 1px solid #394536; border-radius: 14px; background: linear-gradient(110deg, #1a211a, #171d19 70%); }
+    .privacy h2 { margin: 12px 0 10px; font: 500 31px/1.08 var(--serif); letter-spacing: -.035em; }
+    .privacy p { max-width: 450px; margin: 0; color: var(--muted); font-size: 12px; line-height: 1.8; }
+    .facts { display: grid; grid-template-columns: 1fr 1fr; gap: 11px; }
+    .fact { padding: 13px; border: 1px solid #303c32; border-radius: 8px; color: #dce4d9; font-size: 10px; }
+    .fact b { display: block; margin-bottom: 4px; color: var(--lime); font-size: 9px; letter-spacing: .08em; text-transform: uppercase; }
+    .start { display: flex; align-items: center; justify-content: space-between; gap: 24px; padding: 0 0 74px; }
+    .start h2 { margin: 11px 0 8px; font: 500 34px var(--serif); letter-spacing: -.035em; }
+    .start p { margin: 0; color: var(--muted); font-size: 12px; }
+    footer { display: flex; justify-content: space-between; gap: 15px; padding: 22px 0 30px; border-top: 1px solid rgba(211,229,203,.11); color: #879287; font-size: 10px; }
+    .footlinks { display: flex; gap: 19px; }
+    .footlinks a:hover { color: var(--lime); }
+    @media (max-width: 800px) {
+      .hero { grid-template-columns: 1fr; gap: 53px; padding: 67px 0 78px; }
+      .showcase { width: min(100%, 520px); margin: 0 auto; }
+      .features { grid-template-columns: repeat(2, 1fr); }
+      .intro { display: block; }
+      .intro-copy { margin-top: 22px; }
+    }
+    @media (max-width: 520px) {
+      .wrap { width: min(100% - 32px, 1120px); }
+      .nav { height: 66px; }
+      .navlinks { gap: 15px; font-size: 11px; }
+      .navlinks .hide-mobile { display: none; }
+      .hero { padding: 54px 0 64px; }
+      h1 { font-size: 51px; }
+      .lede { font-size: 14px; }
+      .showcase { padding: 17px; }
+      .chat { grid-template-columns: 78px 1fr; }
+      .conversation { padding-left: 12px; }
+      .bubble { font-size: 8px; }
+      .local-tag { right: -7px; }
+      .features { gap: 8px; }
+      .feature { min-height: 180px; padding: 14px; }
+      .feature h3 { font-size: 15px; }
+      .privacy { grid-template-columns: 1fr; gap: 25px; padding: 25px 20px; }
+      .start { display: block; }
+      .start .button { margin-top: 20px; }
+      footer { flex-direction: column; }
+    }
+    @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } *, *:before, *:after { transition-duration: .01ms !important; } }
+  </style>
+</head>
+<body>
+  <header class="wrap nav">
+    <a class="brand" href="#top" aria-label="AI Companion home"><span class="mark" aria-hidden="true">✳</span><span>AI Companion</span></a>
+    <nav class="navlinks" aria-label="Main navigation">
+      <a class="hide-mobile" href="#features">Features</a>
+      <a class="hide-mobile" href="#privacy">Privacy</a>
+      <a href="https://github.com/sarthak045130/ai-companion">GitHub ↗</a>
+    </nav>
+  </header>
+
+  <main id="top">
+    <section class="wrap hero">
+      <div>
+        <div class="eyebrow">A more personal kind of AI</div>
+        <h1>Your AI.<br><em>Your space.</em></h1>
+        <p class="lede">A thoughtful desktop companion that learns what matters to you, keeps its memories in your hands, and runs on your Mac with Ollama.</p>
+        <div class="actions">
+          <a class="button" href="https://github.com/sarthak045130/ai-companion#run-it">Get started <span aria-hidden="true">↗</span></a>
+          <a class="button secondary" href="https://github.com/sarthak045130/ai-companion">Explore the source</a>
+        </div>
+        <p class="micro">Built for macOS · Powered by your local Ollama models</p>
+      </div>
+      <div class="showcase" aria-label="Illustrated preview of the chat interface">
+        <div class="windowbar"><i class="dot"></i><i class="dot"></i><i class="dot"></i><span class="window-title">NOVA · YOUR COMPANION</span></div>
+        <div class="chat">
+          <aside class="side"><p class="side-label">Workspace</p><p class="side-item active">✳ &nbsp; Chat</p><p class="side-item">◉ &nbsp; Memories</p><p class="side-item">◌ &nbsp; Personality</p><p class="side-item">⚙ &nbsp; Settings</p></aside>
+          <div class="conversation">
+            <div class="chathead">A little more in sync <span class="online">● LOCAL</span></div>
+            <div class="bubble">I kept a note that you prefer quiet mornings. Want me to plan around that?</div>
+            <div class="bubble user">That would be great. Keep Friday open.</div>
+            <div class="bubble">Done. Friday is staying clear, and I’ll keep the morning slow.</div>
+            <div class="memory-note"><span>✦</span> 2 memories used in this reply</div>
+            <div class="input">Write a message... <span class="send">↑</span></div>
+          </div>
+        </div>
+        <div class="local-tag"><strong>On your Mac</strong> · your data stays yours</div>
+      </div>
+    </section>
+
+    <div class="rule"></div>
+    <section class="wrap" id="features">
+      <div class="intro">
+        <div><div class="eyebrow">Designed to feel like yours</div><h2>A companion with room to grow with you.</h2></div>
+        <p class="intro-copy">Not another account to manage. Set the personality, see what it remembers, and keep your conversations where they belong: on your computer.</p>
+      </div>
+      <div class="features">
+        <article class="feature"><div class="feature-icon">✦</div><h3>Memory you control</h3><p>Review, search, edit, add, and remove memories. See which ones shaped a reply.</p></article>
+        <article class="feature"><div class="feature-icon">◉</div><h3>A voice of its own</h3><p>Shape its traits, humor, interests, vocabulary, and boundaries in one place.</p></article>
+        <article class="feature"><div class="feature-icon">⌁</div><h3>Voice, when you want it</h3><p>Speak naturally with optional local transcription and macOS voice output.</p></article>
+        <article class="feature"><div class="feature-icon">⌂</div><h3>Powered by your Mac</h3><p>Use Ollama models installed on your own machine. Choose the model that fits you.</p></article>
+      </div>
+    </section>
+
+    <section class="wrap privacy" id="privacy">
+      <div><div class="eyebrow">Private by default</div><h2>Your conversations stay close.</h2><p>The app runs on your Mac and connects to your local Ollama service. Chat history, settings, and memories live in local files you can back up, inspect, or remove.</p></div>
+      <div class="facts"><div class="fact"><b>Local first</b>Runs as a macOS desktop app</div><div class="fact"><b>Your models</b>Uses Ollama on your machine</div><div class="fact"><b>Visible memory</b>Nothing hidden from you</div><div class="fact"><b>Open source</b>Read the code on GitHub</div></div>
+    </section>
+
+    <section class="wrap start">
+      <div><div class="eyebrow">Start with the source</div><h2>Make it your own.</h2><p>Follow the setup guide, choose an Ollama model, and start a conversation.</p></div>
+      <a class="button" href="https://github.com/sarthak045130/ai-companion#run-it">Read the setup guide <span aria-hidden="true">↗</span></a>
+    </section>
+  </main>
+
+  <footer class="wrap"><span>© 2026 AI Companion · A local-first project</span><div class="footlinks"><a href="https://github.com/sarthak045130/ai-companion">GitHub</a><a href="https://github.com/sarthak045130/ai-companion/issues">Feedback</a></div></footer>
+</body>
+</html>

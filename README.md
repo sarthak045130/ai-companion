@@ -1,102 +1,88 @@
 # AI Companion
 
-A local-first desktop AI companion for macOS: persistent personality, long-term memory you can see and edit, saved conversations, voice in and out, and Ollama as the brain. Nothing leaves your computer unless you point it somewhere else.
+**A local-first AI companion for macOS, powered by Ollama.** Give it a personality, keep memories you can inspect and edit, and chat with voice input and output—all from a desktop app on your Mac.
 
-## Quick start (your Mac)
+[Project website](https://sarthak045130.github.io/ai-companion/) · [Source code](https://github.com/sarthak045130/ai-companion) · [Issues](https://github.com/sarthak045130/ai-companion/issues)
+
+> This repository contains the app's source code. The website is a project page; the chat app itself runs locally on macOS and is not hosted as a browser service.
+
+## What it does
+
+- **Chats with Ollama** using models installed on your Mac.
+- **Remembers useful details** across conversations. Review, search, edit, add, and remove memories at any time.
+- **Lets you shape its personality** through editable traits, style, interests, and boundaries.
+- **Supports voice** with local macOS speech output and optional microphone transcription through Whisper.
+- **Keeps conversations and settings on your Mac** in a local SQLite database and files.
+
+## Requirements
+
+- macOS
+- Python 3.10 or newer
+- [Ollama](https://ollama.com/download) with a chat model installed
+- Optional: `pywebview` for a native window, and microphone access for voice input (the setup script attempts to install these)
+
+## Run it
+
+Clone the repository, then from its directory:
 
 ```bash
-cd ai-companion
-./scripts/setup.sh          # creates .venv, installs dependencies, checks Ollama
-./scripts/smoke_test.py     # checks YOUR Ollama, model, embeddings, memory, voice (recommended first run)
-./scripts/run.sh            # opens the app window
+./scripts/setup.sh
+ollama pull qwen3:8b
+ollama pull nomic-embed-text
+./scripts/smoke_test.py
+./scripts/run.sh
 ```
 
-Before the first run, in Terminal:
-
-```bash
-ollama pull qwen3:8b            # or any chat model you like; the app picks an installed one if this isn't
-ollama pull nomic-embed-text    # enables meaning-based memory recall
-```
-
-If `pywebview` can't be installed, the app opens in your browser instead (`./scripts/run.sh --no-window` forces that).
+The embedding model enables meaning-based memory recall. If it is unavailable, memory recall falls back to simpler word matching. To open the interface in your browser instead of a native window, run `./scripts/run.sh --no-window`.
 
 ## How it works
 
-```
-Window (pywebview) ── HTML/CSS/JS UI
-        │  http://127.0.0.1 only, per-launch token
-   Local API (standard library http.server, SSE streaming)
-        │
-   Companion pipeline (app/ai/orchestrator.py)
-   message → history → recall memories → personality → Ollama (streamed) → save reply → [background] extract memories
-        │
- ┌──────┴────────┬────────────────┬───────────────┐
- Ollama client   Memory (SQLite +   Voice            Config
- (stdlib)        vector cache)      Whisper + `say`  settings.json, personality.json
-```
+The app serves its HTML, CSS, and JavaScript interface from a small Python API bound to `127.0.0.1`. A per-launch token protects API requests. The conversation pipeline combines recent history, relevant memories, and the selected personality before streaming a response from Ollama. It saves the reply and extracts potential memories in the background.
 
-I chose a Python backend with a web-technology UI inside a native window because it gives a polished interface and keeps all AI logic in testable Python. The backend uses only the standard library plus numpy, which keeps installation small.
-
-### Memory
-
-- **Extraction** runs after each reply, in the background, so it never delays you. The chat model (or one you choose) is asked which facts are worth keeping, shown the most related existing memories, and can say which one a new fact replaces.
-- **Filtering:** small talk and one-off questions are skipped, and anything rated below your importance threshold is dropped.
-- **Updates:** "I don't like coffee" followed by "I've started liking coffee" replaces the old memory. The old one is kept (hidden by default, shown under "Show memories that were replaced") for history.
-- **Duplicates** are merged instead of stored twice.
-- **Recall:** each message is matched against your memories by meaning (Ollama embeddings), nudged by importance and recency. Very important memories (importance 0.9+, such as your name) are always eligible. Every reply shows "N memories used" so you can see what influenced it.
-- **Fallback:** if the embedding model isn't installed, memory still works with simpler word matching, and re-indexes itself once the model is available.
-- **Control:** Memories (sidebar) lets you search, filter, edit, add and delete. Settings → Memory has the thresholds.
-
-### Personality
-
-Edit `personality/personality.json` (or Settings → Personality) and press "Reload from file". Traits, speaking style, humor, interests, dislikes, emotional tendencies, vocabulary, phrases, boundaries and relationship are turned into the model's context. A fixed rule keeps the companion honest that it is an AI.
-
-### Voice
-
-- **Output:** macOS `say` (local). Choose voice and speed in Settings → Voice; replay or stop from any message.
-- **Input:** the mic button records in the Python backend, then transcribes locally with faster-whisper (`base` by default; the first use downloads the model once). If macOS asks for microphone access, allow it for the app you launched from (Terminal or VS Code). If it never asks, check System Settings → Privacy & Security → Microphone.
-
-### Privacy
-
-- The server binds to `127.0.0.1`, checks Host and Origin headers, and requires a random token on every API call, so other websites and processes can't read your chats or memories.
-- The interface loads no external fonts, scripts or images.
-- The only network traffic is to your Ollama address (default `localhost:11434`) and, on first use only, the Whisper model download from Hugging Face.
-- Data lives in `data/` (SQLite database + `settings.json`). `scripts/export_data.py` writes readable JSON backups.
-
-## Files
-
-```
-app/
-  ai/           ollama_client.py, orchestrator.py (the pipeline)
-  memory/       store.py, extractor.py, embeddings.py
-  voice/        stt.py (mic + Whisper), tts.py (say)
-  database/     db.py, conversations.py
-  config/       settings.py, personality.py
-  backend/      server.py (API + static files)
-  frontend/     index.html, style.css, app.js, render.js
-  core.py       wires everything together    main.py  desktop launcher
-personality/personality.json
-data/           your database and settings (git-ignored)
-tests/          python3 -m unittest discover -s tests -t .   and   node tests/render.test.js
-scripts/        setup.sh, run.sh, smoke_test.py, export_data.py
+```text
+macOS window / local browser
+          │
+ local Python API ─── local data (SQLite + settings)
+          │
+ chat pipeline ────── Ollama on your machine
+          ├─────────── local Whisper (optional voice input)
+          └─────────── macOS `say` (voice output)
 ```
 
-## Testing
+## Privacy
 
-`python3 -m unittest discover -s tests -t .` runs 50 tests against a stand-in Ollama server: persistence across restarts, memory extraction/update/recall, the streaming pipeline, API security, voice paths (with a fake `say`, microphone and Whisper). `node tests/render.test.js` covers the Markdown renderer.
+The API listens on loopback (`127.0.0.1`), validates request origins, and uses a random token for each launch. The interface does not load external fonts, scripts, or images. By default, chat requests and embeddings go to your local Ollama service; first-time Whisper setup may download its speech model. Your chat database, settings, and memories are stored under `data/`, which is ignored by Git.
+
+## Project layout
+
+```text
+app/                 Python backend, AI pipeline, memory, voice, and web UI
+personality/         Default personality configuration
+data/                Local database and settings (ignored by Git)
+scripts/             Setup, run, diagnostics, and data export helpers
+tests/               Unit and renderer tests
+site/                Static project website published with GitHub Pages
+```
 
 ## Troubleshooting
 
-| Symptom | Fix |
-|---|---|
-| "Ollama is offline" banner | Open the Ollama app or run `ollama serve`. |
-| "Model isn't installed" | Settings → AI model, or `ollama pull <name>`. |
-| Replies are slow to start | A thinking model may be reasoning first. Try a non-thinking model, or lower context length. |
-| Memories never recalled | Run `ollama pull nomic-embed-text`; lower Settings → Memory → "Relevance needed for recall". |
-| Nothing gets remembered | Lower the importance threshold, or set a larger "Model for saving memories". |
-| Mic records silence | Allow microphone access (see Voice above) and pick the right input device. |
-| Window won't open | `pip install pywebview`, or use `--no-window`. |
+| Problem | Try this |
+| --- | --- |
+| Ollama is offline | Open the Ollama app or run `ollama serve`. |
+| The selected model is missing | Install it with `ollama pull <model>` or select another installed model in Settings. |
+| Memories are not recalled by meaning | Run `ollama pull nomic-embed-text`; memory still has a word-matching fallback. |
+| The microphone records silence | Allow microphone access for the app you launched from in System Settings → Privacy & Security → Microphone. |
+| The native window does not open | Install `pywebview`, or use `./scripts/run.sh --no-window`. |
 
-## Ideas for later
+## Development
 
-The structure leaves room for: other LLM providers (add a client beside `ollama_client.py`), multiple personalities (the store already takes a path), images, wake word, avatar, sync. A packaged `.app` bundle (PyInstaller or py2app) isn't included yet.
+The test suite uses a stand-in Ollama server and fakes for machine-specific voice features:
+
+```bash
+python3 -m unittest discover -s tests -t .
+node tests/render.test.js
+```
+
+## License
+
+No license has been added yet. Until the author chooses one, the source remains under its default copyright; a public repository does not by itself grant permission to reuse or redistribute it.
